@@ -19,6 +19,7 @@ from core.models import PortfolioState
 from data import historical_feed
 from execution import backtest_adapter
 from portfolio.state import apply_fill
+from report import generate_report
 from storage import db
 from strategy import get_strategy
 
@@ -61,9 +62,9 @@ def run_period(strategy_name: str, period_name: str, lookback: timedelta) -> Non
             timestamp=snapshot.timestamp,
         )
 
-    # TODO: compute and print/save summary metrics (P/L, % return,
-    # win/loss counts, max drawdown) from db.get_all_fills(strategy_name, mode)
-    # -- required per-period output, see HLD section 5
+    metrics = generate_report(strategy_name, period_name, starting_capital=STARTING_CASH)
+    print(f"  {period_name}: return {metrics.return_pct:.2f}%, {metrics.total_trades} trades, "
+          f"win rate {metrics.win_rate:.1f}%, max drawdown {metrics.max_drawdown_pct:.2f}%")
 
 
 def main() -> None:

@@ -135,3 +135,7 @@ def get_all_decisions(strategy: str = None, mode: str = None, db_path: Path = DE
 def get_latest_portfolio(strategy: str = None, mode: str = None, db_path: Path = DEFAULT_DB_PATH):
     rows = _select("portfolio_snapshots", strategy, mode, db_path)
     return rows[-1] if rows else None
+
+
+def get_all_portfolio_snapshots(strategy: str = None, mode: str = None, db_path: Path = DEFAULT_DB_PATH):
+    return _select("portfolio_snapshots", strategy, mode, db_path)
