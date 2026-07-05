@@ -9,6 +9,15 @@ Run with: streamlit run dashboard/app.py
 """
 
 import os
+import sys
+from pathlib import Path
+
+# storage/, core/, etc. live at the repo root, one level up from this
+# file. Depending on how the hosting platform invokes this script, the
+# repo root isn't always on sys.path automatically (confirmed on
+# Streamlit Community Cloud -- it only put dashboard/ itself on the
+# path, causing "ModuleNotFoundError: No module named 'storage'").
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd
 import streamlit as st
