@@ -5,6 +5,7 @@
 **Date:** 2026-07-04  
 **Status:** Ready for implementation  
 **Target reader:** AI coding agent implementing this from scratch
+**Last updated:** 2026-07-04 — added section 16 (Deployment Plan: SQLAlchemy + Postgres for hosting, dashboard-only client demo)
 
 ---
 
@@ -381,7 +382,7 @@ These are the technology decisions. An AI agent implementing this should use the
 | Technical indicators | `pandas-ta` |
 | Data manipulation | `pandas`, `numpy` |
 | Scheduler | `APScheduler` (runs the main loop every 5 minutes during market hours) |
-| Database (live and backtest) | SQLite via Python's built-in `sqlite3` (`storage/db.py`) — one database, both modes, distinguished by the `mode` column |
+| Database (live and backtest) | SQLAlchemy over `storage/db.py`, targeting SQLite for local dev/tests and PostgreSQL for the deployed instance — see section 16. One logical database, both modes, distinguished by the `mode` column |
 | Environment config | `python-dotenv` (`.env` file, loaded by each entry point) |
 | Testing | `pytest` |
 | Local dashboard | `streamlit` (read-only viewer, see Component 7) |
@@ -503,8 +504,8 @@ These are things we are NOT building. If an AI agent sees an opportunity to add 
 - No portfolio optimization or Kelly criterion position sizing
 - No options trading, crypto, ETFs, or anything other than the 8 listed equities
 - No ML models, neural networks, or any learned parameters
-- No multi-user support (this is a single-user local process)
-- No cloud deployment (runs locally for now)
+- No multi-user support (single shared instance and single shared dataset, whether run locally or deployed — see section 16; no per-user accounts or data isolation)
+- No cloud deployment of the live trading loop or backtester (see section 16 — only the read-only dashboard is deployed, backed by a hosted database; `run_live.py`/`backtest.py` still run locally)
 - No automatic hyperparameter tuning or strategy optimization
 - No second or third strategy implementation until the first is complete and backtested
 
@@ -524,3 +525,51 @@ The project is complete when all of the following are true:
 - [ ] A `README.md` exists explaining how to run the bot and how to run the backtest
 - [ ] A local dashboard (`dashboard/app.py`) shows current holdings and profit/loss at any time, satisfying the task brief's visibility requirement
 - [ ] A "going live" checklist document exists covering the 6 steps in section 10
+
+---
+
+## 16. Deployment Plan
+
+Added after initial implementation began, once it became clear a shareable link would be needed soon for clients. This section exists so the reasoning behind it doesn't get lost between conversations — see also section 11 (Tech Stack, database row) and section 14 (out-of-scope items, both updated to reference this section).
+
+### 16.1 What "deployed" actually means here
+
+This system has three separate pieces with very different deployment needs. Only one is being deployed for the client-facing link:
+
+| Piece | Deployed? | Why / why not |
+|---|---|---|
+| `dashboard/app.py` (read-only viewer) | **Yes** | This is what clients need to see — current holdings, P&L, decision/trade history. Read-only, low-risk. |
+| `run_live.py` (live trading loop) | No, stays local | Needs to run continuously forever and holds real Alpaca keys — not something a client "tests" by opening a URL, it's a background process. |
+| `backtest.py` (backtest runner) | No, stays a local script | Currently a CLI script, not a web-triggered action. Clients see its *output* (via the dashboard/reports), not the tool itself. |
+
+### 16.2 Database: moving off raw sqlite3
+
+**Decision:** introduce SQLAlchemy as a data-access layer in front of `storage/db.py`, replacing the current raw `sqlite3` calls. SQLite remains the engine for local development and the test suite (fast, zero-setup, matches the existing tests). The **deployed** instance — the one the public dashboard reads from — uses **PostgreSQL** instead, via a free-tier managed host (Supabase, Neon, or Render all work).
+
+**Why not deploy SQLite directly:** most application hosts (Streamlit Community Cloud included) give the app an *ephemeral* filesystem — any file written to local disk, including a SQLite database, can be wiped on every restart or redeploy. This is a data-loss risk, not a performance one: a client could open the link and see the trade history reset to empty after a routine redeploy. Managed Postgres persists independently of the app process, so this can't happen.
+
+**Why SQLAlchemy specifically, rather than rewriting straight to `psycopg2`:** the point is to not be locked into either engine. This mirrors a pattern that already exists in this codebase for the broker layer — paper vs. live Alpaca is one environment variable, not two code paths (section 3). SQLAlchemy does the same job for storage: the same `storage/db.py` functions stay the same, and a connection string decides whether they talk to SQLite (tests, local dev) or Postgres (the deployed instance).
+
+**Sequencing:** this migration must happen *before* the dashboard is deployed against real hosted data — `storage/db.py` currently only works against the local SQLite file (`storage/bot.db`) via raw `sqlite3`.
+
+### 16.3 Multi-user / auth — explicitly still out of scope
+
+Deploying the dashboard does **not** mean different visitors get separate accounts or separate data. Everyone who opens the link sees the **same single shared instance** — one bot, one portfolio, one trade history. This is still consistent with section 14's "no multi-user support" ruling; it just makes that one shared instance visible over a URL instead of only on a local machine.
+
+If per-client accounts and isolated data are needed later, that is a distinct, materially larger feature — authentication, per-user data isolation, and likely outgrowing Streamlit's dashboard model for something with real session/login handling. That is a deliberate future scope decision to make explicitly, not something to build silently as a side effect of hosting.
+
+### 16.4 Rough deployment shape
+
+```
+Hosted PostgreSQL (Supabase / Neon / Render free tier)
+        ^
+        | reads via SQLAlchemy
+        |
+dashboard/app.py — deployed on Streamlit Community Cloud
+        ^
+        | shareable URL
+        |
+   Clients / reviewers
+```
+
+`run_live.py` and `backtest.py` keep running locally (or later, on a separate always-on host, if live trading itself needs to move off a local machine) and write into the same hosted Postgres database — so the deployed dashboard always reflects real, current data rather than a stale local snapshot.
