@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onboarding Task Analysis</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 60%);
+      border-bottom: 1px solid #1e2535;
+      padding: 48px 32px 36px;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: -0.5px;
+    }
+    .hero p {
+      margin-top: 10px;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: #1e2535;
+      border: 1px solid #2d3748;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+    .badge.green { border-color: #166534; color: #4ade80; background: #052e16; }
+    .badge.yellow { border-color: #713f12; color: #facc15; background: #1c1400; }
+    .badge.red { border-color: #7f1d1d; color: #f87171; background: #1c0202; }
+    .badge.blue { border-color: #1e3a5f; color: #60a5fa; background: #020e1c; }
+
+    .main { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* ---- Section layout ---- */
+    .section { margin-bottom: 52px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1e2535;
+    }
+    .section-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .icon-blue { background: #0c1929; border: 1px solid #1e3a5f; }
+    .icon-green { background: #031a0e; border: 1px solid #14532d; }
+    .icon-yellow { background: #1a1100; border: 1px solid #713f12; }
+    .icon-purple { background: #150d24; border: 1px solid #3b1c6e; }
+    .icon-red { background: #1c0202; border: 1px solid #7f1d1d; }
+    .icon-cyan { background: #011a1a; border: 1px solid #0e4d4d; }
+
+    .section-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .section-header span {
+      font-size: 0.8rem;
+      color: #475569;
+      font-weight: 400;
+    }
+
+    /* ---- Cards ---- */
+    .card {
+      background: #131824;
+      border: 1px solid #1e2535;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+    .card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+    }
+    .card p, .card li {
+      font-size: 0.88rem;
+      color: #94a3b8;
+    }
+    .card ul { padding-left: 18px; }
+    .card li { margin-bottom: 5px; }
+
+    /* ---- Decision table ---- */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    th {
+      background: #0c1115;
+      color: #60a5fa;
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid #1e2535;
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1a2030;
+      color: #94a3b8;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #111824; }
+    .check { color: #4ade80; }
+    .cross { color: #f87171; }
+    .neutral { color: #facc15; }
+    .winner-row td { background: #031a0e !important; }
+    .winner-row td:first-child { border-left: 3px solid #4ade80; }
+
+    /* ---- Two-col grid ---- */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+    /* ---- Strategy boxes ---- */
+    .strategy-block {
+      background: #131824;
+      border: 1px solid #1e2535;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+    .strategy-block h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 14px;
+    }
+    .rule-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      align-items: flex-start;
+    }
+    .rule-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 110px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+    .rule-value {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+    .rule-value code {
+      background: #0c1115;
+      border: 1px solid #1e2535;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #a5f3fc;
+    }
+
+    /* ---- Risk/concern callouts ---- */
+    .callout {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      font-size: 0.86rem;
+      display: flex;
+      gap: 12px;
+    }
+    .callout-icon { font-size: 1rem; flex-shrink: 0; }
+    .callout-body { color: #94a3b8; }
+    .callout-body strong { color: #e2e8f0; }
+    .callout.warn { background: #1a1100; border: 1px solid #713f12; }
+    .callout.good { background: #031a0e; border: 1px solid #166534; }
+    .callout.info { background: #020e1c; border: 1px solid #1e3a5f; }
+    .callout.bad { background: #1c0202; border: 1px solid #7f1d1d; }
+
+    /* ---- Architecture diagram ---- */
+    .arch {
+      background: #0c1115;
+      border: 1px solid #1e2535;
+      border-radius: 10px;
+      padding: 24px;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 0.8rem;
+      color: #64748b;
+      overflow-x: auto;
+    }
+    .arch .layer { color: #60a5fa; font-weight: 700; }
+    .arch .component { color: #4ade80; }
+    .arch .connector { color: #334155; }
+    .arch .note { color: #475569; }
+
+    /* ---- Progress steps ---- */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex;
+      gap: 16px;
+      padding-bottom: 20px;
+      position: relative;
+    }
+    .step:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 14px; top: 32px; bottom: 0;
+      width: 1px;
+      background: #1e2535;
+    }
+    .step-num {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: #1e2535;
+      color: #60a5fa;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid #2d3748;
+    }
+    .step-content h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 4px;
+    }
+    .step-content p {
+      font-size: 0.83rem;
+      color: #64748b;
+    }
+    .step-content code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: #a5f3fc;
+      background: #0c1115;
+      border: 1px solid #1e2535;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* ---- Verdict box ---- */
+    .verdict {
+      background: linear-gradient(135deg, #031a0e, #0c1115);
+      border: 1px solid #166534;
+      border-radius: 12px;
+      padding: 28px;
+      text-align: center;
+    }
+    .verdict h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #4ade80;
+      margin-bottom: 12px;
+    }
+    .verdict p {
+      font-size: 0.9rem;
+      color: #86efac;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ---- Pill tags ---- */
+    .tag {
+      display: inline-block;
+      font-size: 0.73rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 99px;
+      margin: 2px;
+    }
+    .tag-blue { background: #0c1929; border: 1px solid #1e3a5f; color: #60a5fa; }
+    .tag-green { background: #031a0e; border: 1px solid #14532d; color: #4ade80; }
+    .tag-yellow { background: #1a1100; border: 1px solid #713f12; color: #facc15; }
+    .tag-red { background: #1c0202; border: 1px solid #7f1d1d; color: #f87171; }
+
+    /* divider */
+    .divider { border: none; border-top: 1px solid #1e2535; margin: 40px 0; }
+
+    /* inline code */
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.82em;
+      background: #0c1115;
+      border: 1px solid #1e2535;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #a5f3fc;
+    }
+
+    .toc {
+      background: #131824;
+      border: 1px solid #1e2535;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 40px;
+    }
+    .toc h3 { font-size: 0.85rem; color: #475569; font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .toc ol { padding-left: 18px; }
+    .toc li { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; }
+    .toc li a { color: #60a5fa; text-decoration: none; }
+    .toc li a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Onboarding Task — Approach Analysis</h1>
+  <p>FutureSmart AI &nbsp;·&nbsp; Automated Trading Bot + Paper Trading Prototype</p>
+  <div class="badge-row">
+    <span class="badge blue">Task 1: Trading Bot</span>
+    <span class="badge">Task 2: Kanban Board</span>
+    <span class="badge green">Platform: Alpaca recommended</span>
+    <span class="badge yellow">Strategy: EMA + RSI Combo</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="toc">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#overview">What the task actually asks for</a></li>
+      <li><a href="#platform">Platform selection analysis</a></li>
+      <li><a href="#strategy">Strategy design</a></li>
+      <li><a href="#architecture">Recommended architecture</a></li>
+      <li><a href="#backtesting">Backtesting approach</a></li>
+      <li><a href="#risks">Risks & gaps in a naive approach</a></li>
+      <li><a href="#kanban">Kanban board task (Task 2)</a></li>
+      <li><a href="#plan">Suggested execution plan</a></li>
+    </ol>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <div class="section-icon icon-blue">📋</div>
+      <div>
+        <h2>What the Task Actually Asks For</h2>
+        <span>Breaking down the 7 deliverables into real scopes</span>
+      </div>
+    </div>
+
+    <div class="callout good">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>This is not just a coding task.</strong> It's a research + engineering + finance task. The graders are checking whether you understand trading systems end-to-end, not just whether you can write Python.
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Must deliver (hard requirements)</h3>
+        <ul>
+          <li>Working paper trading bot on 8 tickers</li>
+          <li>Backtest across 6 time periods (1wk → 3yr)</li>
+          <li>Complete trade log (no cherry-picking)</li>
+          <li>P&L summary for every period</li>
+          <li>Max drawdown, win/loss counts per period</li>
+          <li>Instructions to go live with real money</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Success criteria emphasis</h3>
+        <ul>
+          <li>Same strategy logic across all timeframes</li>
+          <li>Reproducible backtest (others can run it)</li>
+          <li>Architecture that scales to real money</li>
+          <li>Every trade decision must be logged</li>
+          <li>Bot runs autonomously, not manually triggered</li>
+          <li>Clear research doc (not just a list)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Biggest trap:</strong> People build the bot first and then try to retrofit it to pass backtesting. The correct order is: define strategy → backtest it → build live bot with the exact same strategy logic.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="platform">
+    <div class="section-header">
+      <div class="section-icon icon-green">🏦</div>
+      <div>
+        <h2>Platform Selection Analysis</h2>
+        <span>Which broker API actually wins for this task</span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Paper Trading</th>
+            <th>Real Trading</th>
+            <th>US Stocks</th>
+            <th>API Quality</th>
+            <th>Free Tier</th>
+            <th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="winner-row">
+            <td><strong style="color:#4ade80">Alpaca</strong></td>
+            <td><span class="check">✓ Built-in</span></td>
+            <td><span class="check">✓ Same API</span></td>
+            <td><span class="check">✓ All US</span></td>
+            <td><span class="check">Excellent</span></td>
+            <td><span class="check">✓ $0</span></td>
+            <td><span class="check">WINNER</span></td>
+          </tr>
+          <tr>
+            <td>Interactive Brokers</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="neutral">Complex TWS API</span></td>
+            <td><span class="cross">$10k min</span></td>
+            <td><span class="cross">Overkill</span></td>
+          </tr>
+          <tr>
+            <td>TD Ameritrade / Schwab</td>
+            <td><span class="neutral">Sandbox only</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="neutral">OAuth pain</span></td>
+            <td><span class="neutral">Account req</span></td>
+            <td><span class="cross">API sunset risk</span></td>
+          </tr>
+          <tr>
+            <td>Tradier</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="neutral">OK</span></td>
+            <td><span class="neutral">Limited</span></td>
+            <td><span class="neutral">Viable backup</span></td>
+          </tr>
+          <tr>
+            <td>Webull (API)</td>
+            <td><span class="neutral">Unofficial</span></td>
+            <td><span class="cross">Unofficial</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">Reverse-eng'd</span></td>
+            <td><span class="cross">TOS violation</span></td>
+            <td><span class="cross">Avoid</span></td>
+          </tr>
+          <tr>
+            <td>Robinhood (robin_stocks)</td>
+            <td><span class="cross">No paper</span></td>
+            <td><span class="cross">Unofficial</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">Unofficial</span></td>
+            <td><span class="cross">TOS violation</span></td>
+            <td><span class="cross">Avoid</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Why Alpaca is the clear choice</h3>
+      <ul>
+        <li><strong>Paper and live use the same API base URL</strong> — switching to real money is literally changing one environment variable (<code>APCA_API_BASE_URL</code>)</li>
+        <li>Commission-free, no minimum account balance for paper</li>
+        <li>WebSocket streaming for real-time price feeds</li>
+        <li>REST API for orders, positions, account data — well-documented Python SDK (<code>alpaca-trade-api</code>)</li>
+        <li>Market data via Polygon.io (built in) — use this for backtesting too so data is consistent</li>
+        <li>Rate limits are generous enough for 8 tickers checking every 1–5 minutes</li>
+      </ul>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div class="callout-body">
+        For historical data in backtesting, use <strong>yfinance</strong> (free, no API key, covers 3+ years) rather than Alpaca's historical endpoint, which has a shorter free-tier lookback window. Keep your strategy logic completely platform-agnostic so the same code runs on both yfinance data and live Alpaca data.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="strategy">
+    <div class="section-header">
+      <div class="section-icon icon-yellow">📈</div>
+      <div>
+        <h2>Strategy Design</h2>
+        <span>What actually works for these 8 high-volatility tech/finance stocks</span>
+      </div>
+    </div>
+
+    <div class="callout good">
+      <span class="callout-icon">💡</span>
+      <div class="callout-body">
+        <strong>Recommended strategy: EMA Crossover + RSI Filter.</strong> This is a classic momentum strategy that works well with NVDA/TSLA/META-style volatile stocks. It's simple enough to implement cleanly but defensible enough to explain. Avoid overly complex ML strategies — they overfit and are hard to reproduce.
+      </div>
+    </div>
+
+    <div class="strategy-block">
+      <h3>EMA 9 / EMA 21 Crossover with RSI Confirmation</h3>
+      <div class="rule-row">
+        <div class="rule-label">Timeframe</div>
+        <div class="rule-value">Check every <code>5 minutes</code> during market hours (9:30 AM – 4:00 PM ET)</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Buy signal</div>
+        <div class="rule-value">EMA9 crosses above EMA21 AND RSI(14) is between 40–65 (momentum, not overbought)</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Sell signal</div>
+        <div class="rule-value">EMA9 crosses below EMA21 OR stop-loss hit OR take-profit hit</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Capital per trade</div>
+        <div class="rule-value"><code>12.5%</code> of portfolio per position (8 stocks = 100% max deployed)</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Stop-loss</div>
+        <div class="rule-value"><code>-3%</code> from entry price — hard exit, no exceptions</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Take-profit</div>
+        <div class="rule-value"><code>+6%</code> from entry price (2:1 risk/reward ratio)</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Max open positions</div>
+        <div class="rule-value"><code>4</code> simultaneous positions maximum (50% capital deployed at peak)</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">API failure</div>
+        <div class="rule-value">Log error, skip this cycle, do NOT close existing positions. Retry next tick.</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Missing data</div>
+        <div class="rule-value">Skip that ticker for this cycle, log a warning. Never trade on incomplete signal.</div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Indicators</div>
+        <div class="rule-value">Computed via <code>pandas-ta</code> or <code>ta-lib</code> — run on last 50 candles of 5m data</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Pattern Day Trader rule:</strong> If using a real account with under $25,000, you're limited to 3 day trades per 5-day rolling period. Paper trading has no PDT restrictions — but document this as a "what's needed before going live" requirement.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="architecture">
+    <div class="section-header">
+      <div class="section-icon icon-purple">🏗️</div>
+      <div>
+        <h2>Recommended Architecture</h2>
+        <span>Clean separation so live trading is a config switch, not a rewrite</span>
+      </div>
+    </div>
+
+    <div class="arch">
+<span class="layer">┌─── DATA LAYER ─────────────────────────────────────────────┐</span>
+│  <span class="component">MarketDataFetcher</span>                                           │
+│    ├── Live mode  → Alpaca WebSocket / REST bars endpoint      │
+│    └── Backtest mode → yfinance (same tickers, same format)    │
+<span class="layer">└────────────────────────────────────────────────────────────┘</span>
+                              │ OHLCV DataFrame (unified)
+                              ▼
+<span class="layer">┌─── STRATEGY LAYER ─────────────────────────────────────────┐</span>
+│  <span class="component">SignalEngine</span>  (pure functions, no I/O, easily unit-testable)  │
+│    ├── compute_ema(df, period)                               │
+│    ├── compute_rsi(df, period)                               │
+│    └── generate_signal(df) → BUY / SELL / HOLD             │
+<span class="layer">└────────────────────────────────────────────────────────────┘</span>
+                              │ Signal + metadata
+                              ▼
+<span class="layer">┌─── RISK LAYER ──────────────────────────────────────────────┐</span>
+│  <span class="component">RiskManager</span>                                                  │
+│    ├── check_max_positions(portfolio)                        │
+│    ├── calculate_position_size(capital, risk_pct)           │
+│    └── apply_stop_loss / take_profit guards                 │
+<span class="layer">└────────────────────────────────────────────────────────────┘</span>
+                              │ Approved order
+                              ▼
+<span class="layer">┌─── EXECUTION LAYER ─────────────────────────────────────────┐</span>
+│  <span class="component">OrderExecutor</span>                                                │
+│    ├── Paper mode → Alpaca paper API (PAPER_BASE_URL)        │
+│    └── Live mode  → Alpaca live API  (LIVE_BASE_URL) ← <span class="note">just env var</span> │
+<span class="layer">└────────────────────────────────────────────────────────────┘</span>
+                              │ Order confirmation
+                              ▼
+<span class="layer">┌─── LOGGING LAYER ───────────────────────────────────────────┐</span>
+│  <span class="component">TradeLogger</span>                                                  │
+│    ├── SQLite DB  → trades.db (all orders, signals, P&L)     │
+│    └── CSV export → trade_log.csv (for submission)          │
+<span class="layer">└────────────────────────────────────────────────────────────┘</span>
+                              │
+                              ▼
+<span class="layer">┌─── SCHEDULER ───────────────────────────────────────────────┐</span>
+│  <span class="component">APScheduler</span>  — every 5 min, Mon-Fri, 9:30–16:00 ET          │
+│    └── Calls main bot loop for all 8 tickers                │
+<span class="layer">└────────────────────────────────────────────────────────────┘</span>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Key design principle: strategy is environment-agnostic</h3>
+      <p>The <code>SignalEngine</code> takes a DataFrame and returns a signal. It doesn't know or care whether the data came from yfinance (backtest) or Alpaca live feed. This is what makes backtests trustworthy — the exact same function runs in both modes.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="backtesting">
+    <div class="section-header">
+      <div class="section-icon icon-cyan">🔬</div>
+      <div>
+        <h2>Backtesting Approach</h2>
+        <span>How to produce results they can't dispute</span>
+      </div>
+    </div>
+
+    <div class="callout bad">
+      <span class="callout-icon">🚫</span>
+      <div class="callout-body">
+        <strong>Do NOT use backtesting libraries as a black box.</strong> Using Backtrader or Zipline as-is makes it hard to prove that your live bot uses the same logic. Write a custom backtester (it's ~150 lines) using the same <code>SignalEngine</code> functions — this directly satisfies "same strategy logic must be used across all timeframes."
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Custom vectorized backtester approach</h3>
+      <ul>
+        <li>Download 3yr history per ticker via <code>yfinance</code> in one shot, resample to 5-min bars</li>
+        <li>Slice the DataFrame for each period (1wk, 1mo, 3mo, 6mo, 1yr, 3yr) — same data, different window</li>
+        <li>Run <code>SignalEngine.generate_signal()</code> on each row in sequence (no lookahead bias)</li>
+        <li>Simulate fills at next-bar open (realistic — not at signal candle's close)</li>
+        <li>Track position, capital, drawdown, fees (assume <strong>$0.005/share</strong> or 0.1% slippage as assumption)</li>
+        <li>Output: CSV + summary dict with all required metrics per period</li>
+      </ul>
+    </div>
+
+    <div class="table-wrap" style="margin-top:14px">
+      <table>
+        <thead>
+          <tr><th>Period</th><th>Date range (from today 2026-07-04)</th><th>yfinance interval</th><th>Candles per ticker</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 week</td><td>2026-06-27 → 2026-07-04</td><td>5m</td><td>~78</td></tr>
+          <tr><td>1 month</td><td>2026-06-04 → 2026-07-04</td><td>5m</td><td>~390</td></tr>
+          <tr><td>3 months</td><td>2026-04-04 → 2026-07-04</td><td>5m</td><td>~1,170</td></tr>
+          <tr><td>6 months</td><td>2026-01-04 → 2026-07-04</td><td>30m</td><td>~780</td></tr>
+          <tr><td>1 year</td><td>2025-07-04 → 2026-07-04</td><td>1h</td><td>~1,560</td></tr>
+          <tr><td>3 years</td><td>2023-07-04 → 2026-07-04</td><td>1d</td><td>~756</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div class="callout-body">
+        <strong>yfinance limitation:</strong> 5-minute data is only available for the past 60 days. For periods longer than 2 months, you'll need to use 30-min or 1-hour bars and adapt your EMA periods accordingly (this is fine — document the adaptation).
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="risks">
+    <div class="section-header">
+      <div class="section-icon icon-red">⚡</div>
+      <div>
+        <h2>Risks & Gaps in a Naive Approach</h2>
+        <span>Where most submissions fail this kind of task</span>
+      </div>
+    </div>
+
+    <div class="callout bad">
+      <span class="callout-icon">🚫</span>
+      <div class="callout-body"><strong>Lookahead bias</strong> — Using future data in signal computation. The most common mistake: computing EMA on the full dataset, then checking if it crossed at time T. The correct approach: at each timestep T, only use data up to T.</div>
+    </div>
+    <div class="callout bad">
+      <span class="callout-icon">🚫</span>
+      <div class="callout-body"><strong>Survivorship bias</strong> — All 8 tickers are mega-caps that already survived and grew. Backtests on these will look good regardless. Acknowledge this explicitly in your research document.</div>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body"><strong>Overfitting parameters</strong> — Don't tune EMA(9,21) and RSI(14) by running backtests and picking whatever made the most money. Choose parameters before seeing the results, then run the test once.</div>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body"><strong>Missing market hours check</strong> — Your bot must check that the market is open before placing orders. Alpaca has an <code>/v2/clock</code> endpoint — use it at the start of every cycle.</div>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body"><strong>Fractional shares</strong> — Alpaca supports fractional shares in paper mode. If you don't use them, your 12.5% capital allocation won't be exact for high-priced stocks like NVDA or GOOGL.</div>
+    </div>
+    <div class="callout good">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body"><strong>What impresses reviewers:</strong> Showing a period where the bot lost money (e.g., a sideways/bear market period) and explaining why. It proves you didn't cherry-pick and that you understand the strategy's weaknesses.</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="kanban">
+    <div class="section-header">
+      <div class="section-icon icon-purple">🗂️</div>
+      <div>
+        <h2>Kanban Board Task (Take-Home Assignment)</h2>
+        <span>Frontend Fullstack Intern — separate from the trading bot</span>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div class="callout-body">This appears to be a take-home assignment from a <strong>different company</strong> (in your job folder, not the paper-stock-bot folder). It's a solid fullstack frontend task — here's the key approach guidance.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Tech decisions that matter</h3>
+        <ul>
+          <li><strong>dnd-kit over react-beautiful-dnd</strong> — rbd is unmaintained as of 2023. dnd-kit is actively maintained and React 18+ compatible</li>
+          <li><strong>indexedDB via <code>idb</code> library</strong> over raw localStorage — handles large task sets, async, and is the "right" choice they're testing</li>
+          <li><strong>shadcn/ui</strong> — use it, it shows you know modern React tooling</li>
+          <li><strong>Next.js App Router</strong> — use Server Components where possible, but Kanban board itself is client-side</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>The dnd-kit gotchas</h3>
+        <ul>
+          <li>Use <code>DndContext</code> at Board level, <code>SortableContext</code> per Column</li>
+          <li>Use <code>DragOverlay</code> for the dragged card — don't move the original DOM element</li>
+          <li>Store the active item in state during drag to render the overlay correctly</li>
+          <li><code>closestCorners</code> collision detection works better than <code>closestCenter</code> for Kanban layouts</li>
+          <li>Handle cross-column drops in <code>onDragEnd</code> by checking <code>over.id</code> vs column IDs</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Bonus feature recommendation: Task count per column</h3>
+      <p>Of the 4 options, "Display task count per column" is the easiest to implement (2 lines), looks great in a demo, and doesn't add complexity that could introduce bugs. Save your time for polish and the video.</p>
+    </div>
+
+    <div class="callout good">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body"><strong>What they're actually testing:</strong> Clean code + ability to explain decisions. They explicitly say "we value clear communication as much as feature completeness." In your video, don't just demo — explain WHY you chose dnd-kit over alternatives, why idb over localStorage, etc.</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <div class="section" id="plan">
+    <div class="section-header">
+      <div class="section-icon icon-green">🗓️</div>
+      <div>
+        <h2>Suggested Execution Plan</h2>
+        <span>For the trading bot — ordered to avoid rework</span>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Write the Research Document first</h4>
+          <p>Don't skip this. It forces you to understand the space before committing to choices. Cover: Alpaca, Tradier, IBKR, Quantconnect, Backtrader, yfinance. Explain tradeoffs, not just lists.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Define and document the strategy</h4>
+          <p>Write down all the rules (buy/sell/stop-loss/position sizing) BEFORE writing any code. This becomes your strategy document and ensures the backtest and live bot use the same rules.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Build the <code>SignalEngine</code> module with unit tests</h4>
+          <p>Pure functions only. Takes a DataFrame, returns BUY/SELL/HOLD. Test it on known OHLCV sequences so you're confident before running the backtest.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Build and run the backtester</h4>
+          <p>Download yfinance data for all 8 tickers × 3 years. Run the backtest across all 6 periods. Generate the trade log CSV and summary metrics. Fix any logical bugs.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h4>Build the live paper trading bot</h4>
+          <p>Connect to Alpaca paper account. Wire up the same <code>SignalEngine</code>. Add order execution, position tracking, SQLite logging. Use <code>APScheduler</code> for the 5-min loop with market-hours check.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <h4>Write the "going live" checklist</h4>
+          <p>What changes to go from paper to real: change env var, verify PDT compliance, set actual stop-loss orders server-side, add real capital limits. This is deliverable #9 and often overlooked.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-content">
+          <h4>Package all 9 deliverables</h4>
+          <p>Research doc, platform explanation, strategy doc, bot code, backtest report, trade logs, P&L summary, run instructions, live-trading checklist.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="verdict">
+    <h2>Bottom Line</h2>
+    <p>Use <strong>Alpaca</strong> for paper trading, <strong>yfinance</strong> for backtesting data, <strong>EMA 9/21 + RSI 14</strong> as the strategy, and keep your <code>SignalEngine</code> as a pure module that both the backtester and live bot share. That single architectural decision is what makes this submission trustworthy and scalable. Tackle backtesting before the live bot — not after.</p>
+  </div>
+
+</div>
+</body>
+</html>
