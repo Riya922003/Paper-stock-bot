@@ -1,0 +1,18 @@
+Backtest Report: trend_following -- 1_week
+==================================================
+Starting capital:   $100,000.00
+Ending capital:     $99,775.35
+Net P&L:            $-224.65
+Return:             -0.22%
+
+Total trades:       27
+Winning trades:     7
+Losing trades:      20
+Win rate:           25.93%
+Max drawdown:       0.75%
+
+Best trade:         MSFT entry $371.59 -> exit $385.55, P&L $470.13
+Worst trade:        NVDA entry $199.75 -> exit $196.59, P&L $-197.74
+
+Slippage assumption:   0.10% (applied against the trader on every fill)
+Commission assumption: $0.00 (Alpaca is commission-free)

@@ -1,0 +1,18 @@
+Backtest Report: trend_following -- 6_months
+==================================================
+Starting capital:   $100,000.00
+Ending capital:     $101,094.21
+Net P&L:            $1,094.21
+Return:             1.09%
+
+Total trades:       102
+Winning trades:     30
+Losing trades:      72
+Win rate:           29.41%
+Max drawdown:       7.55%
+
+Best trade:         GOOGL entry $287.30 -> exit $320.12, P&L $1,429.64
+Worst trade:        GOOGL entry $367.96 -> exit $348.51, P&L $-661.18
+
+Slippage assumption:   0.10% (applied against the trader on every fill)
+Commission assumption: $0.00 (Alpaca is commission-free)

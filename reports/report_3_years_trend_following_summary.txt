@@ -1,0 +1,18 @@
+Backtest Report: trend_following -- 3_years
+==================================================
+Starting capital:   $100,000.00
+Ending capital:     $110,476.47
+Net P&L:            $10,476.47
+Return:             10.48%
+
+Total trades:       105
+Winning trades:     46
+Losing trades:      59
+Win rate:           43.81%
+Max drawdown:       5.73%
+
+Best trade:         JPM entry $215.02 -> exit $244.26, P&L $1,712.04
+Worst trade:        NVDA entry $145.20 -> exit $121.69, P&L $-1,997.85
+
+Slippage assumption:   0.10% (applied against the trader on every fill)
+Commission assumption: $0.00 (Alpaca is commission-free)
