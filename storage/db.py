@@ -1,5 +1,5 @@
 """
-SQLite-backed storage for the Decision Log and trade history -- the
+SQLAlchemy-backed storage for the Decision Log and trade history -- the
 audit trail described in the HLD. This is the only place either the
 live loop or the backtester should write decisions/fills; the
 dashboard reads from here too.
@@ -9,133 +9,178 @@ multiple backtest periods can share one database without their
 results ever being mixed together (see docs/Trading_Bot_HLD_Approach.md
 section 5 -- no cherry-picking, each strategy gets its own complete,
 separate record).
+
+Engine selection (PRD section 16.2): if the DATABASE_URL environment
+variable is set, that's used directly (the deployed instance points
+this at a hosted PostgreSQL database). Otherwise, falls back to a
+local SQLite file at `db_path` -- this is what local development and
+the test suite use, keeping tests fast with zero setup. Every public
+function below keeps its original signature and return shape (list of
+plain dicts / a single dict / None) so this migration is a drop-in
+replacement -- nothing calling into this module needed to change.
 """
 
 import json
-import sqlite3
-from contextlib import contextmanager
+import os
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
+
+from sqlalchemy import (
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    insert,
+    select,
+)
 
 from core.models import Decision, Fill
 
 DEFAULT_DB_PATH = Path(__file__).parent / "bot.db"
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS decisions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp TEXT NOT NULL,
-    ticker TEXT NOT NULL,
-    action TEXT NOT NULL,
-    reason TEXT NOT NULL,
-    quantity REAL NOT NULL,
-    strategy TEXT NOT NULL,
-    mode TEXT NOT NULL
-);
+metadata = MetaData()
 
-CREATE TABLE IF NOT EXISTS fills (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp TEXT NOT NULL,
-    ticker TEXT NOT NULL,
-    action TEXT NOT NULL,
-    quantity REAL NOT NULL,
-    price REAL NOT NULL,
-    order_id TEXT,
-    strategy TEXT NOT NULL,
-    mode TEXT NOT NULL
-);
+decisions_table = Table(
+    "decisions",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("timestamp", String, nullable=False),
+    Column("ticker", String, nullable=False),
+    Column("action", String, nullable=False),
+    Column("reason", String, nullable=False),
+    Column("quantity", Float, nullable=False),
+    Column("strategy", String, nullable=False),
+    Column("mode", String, nullable=False),
+)
 
-CREATE TABLE IF NOT EXISTS portfolio_snapshots (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp TEXT NOT NULL,
-    cash REAL NOT NULL,
-    equity REAL NOT NULL,
-    positions_json TEXT NOT NULL,
-    strategy TEXT NOT NULL,
-    mode TEXT NOT NULL
-);
-"""
+fills_table = Table(
+    "fills",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("timestamp", String, nullable=False),
+    Column("ticker", String, nullable=False),
+    Column("action", String, nullable=False),
+    Column("quantity", Float, nullable=False),
+    Column("price", Float, nullable=False),
+    Column("order_id", String),
+    Column("strategy", String, nullable=False),
+    Column("mode", String, nullable=False),
+)
+
+portfolio_snapshots_table = Table(
+    "portfolio_snapshots",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("timestamp", String, nullable=False),
+    Column("cash", Float, nullable=False),
+    Column("equity", Float, nullable=False),
+    Column("positions_json", String, nullable=False),
+    Column("strategy", String, nullable=False),
+    Column("mode", String, nullable=False),
+)
 
 
-@contextmanager
-def get_connection(db_path: Path = DEFAULT_DB_PATH):
-    conn = sqlite3.connect(db_path)
-    try:
-        yield conn
-    finally:
-        conn.close()
+def _resolve_url(db_path: Path) -> str:
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return database_url
+    return f"sqlite:///{db_path}"
+
+
+@lru_cache(maxsize=None)
+def _get_engine(url: str):
+    return create_engine(url)
+
+
+def _engine_for(db_path: Path):
+    return _get_engine(_resolve_url(db_path))
 
 
 def init_db(db_path: Path = DEFAULT_DB_PATH) -> None:
-    with get_connection(db_path) as conn:
-        conn.executescript(SCHEMA)
-        conn.commit()
+    metadata.create_all(_engine_for(db_path))
 
 
 def log_decision(decision: Decision, strategy: str, mode: str, timestamp: datetime,
                   db_path: Path = DEFAULT_DB_PATH) -> None:
-    with get_connection(db_path) as conn:
+    engine = _engine_for(db_path)
+    with engine.begin() as conn:
         conn.execute(
-            "INSERT INTO decisions (timestamp, ticker, action, reason, quantity, strategy, mode) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (timestamp.isoformat(), decision.ticker, decision.action,
-             decision.reason, decision.quantity, strategy, mode),
+            insert(decisions_table).values(
+                timestamp=timestamp.isoformat(),
+                ticker=decision.ticker,
+                action=decision.action,
+                reason=decision.reason,
+                quantity=decision.quantity,
+                strategy=strategy,
+                mode=mode,
+            )
         )
-        conn.commit()
 
 
 def log_fill(fill: Fill, strategy: str, mode: str, db_path: Path = DEFAULT_DB_PATH) -> None:
-    with get_connection(db_path) as conn:
+    engine = _engine_for(db_path)
+    with engine.begin() as conn:
         conn.execute(
-            "INSERT INTO fills (timestamp, ticker, action, quantity, price, order_id, strategy, mode) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (fill.timestamp.isoformat(), fill.ticker, fill.action, fill.quantity,
-             fill.price, fill.order_id, strategy, mode),
+            insert(fills_table).values(
+                timestamp=fill.timestamp.isoformat(),
+                ticker=fill.ticker,
+                action=fill.action,
+                quantity=fill.quantity,
+                price=fill.price,
+                order_id=fill.order_id,
+                strategy=strategy,
+                mode=mode,
+            )
         )
-        conn.commit()
 
 
 def save_portfolio_snapshot(cash: float, equity: float, positions: dict, strategy: str,
                              mode: str, timestamp: datetime,
                              db_path: Path = DEFAULT_DB_PATH) -> None:
-    with get_connection(db_path) as conn:
+    engine = _engine_for(db_path)
+    with engine.begin() as conn:
         conn.execute(
-            "INSERT INTO portfolio_snapshots (timestamp, cash, equity, positions_json, strategy, mode) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (timestamp.isoformat(), cash, equity, json.dumps(positions), strategy, mode),
+            insert(portfolio_snapshots_table).values(
+                timestamp=timestamp.isoformat(),
+                cash=cash,
+                equity=equity,
+                positions_json=json.dumps(positions),
+                strategy=strategy,
+                mode=mode,
+            )
         )
-        conn.commit()
 
 
-def _select(table: str, strategy: str | None, mode: str | None, db_path: Path):
-    query = f"SELECT * FROM {table}"
-    conditions, params = [], []
+def _select(table: Table, strategy: str | None, mode: str | None, db_path: Path) -> list[dict]:
+    engine = _engine_for(db_path)
+    query = select(table)
     if strategy:
-        conditions.append("strategy = ?")
-        params.append(strategy)
+        query = query.where(table.c.strategy == strategy)
     if mode:
-        conditions.append("mode = ?")
-        params.append(mode)
-    if conditions:
-        query += " WHERE " + " AND ".join(conditions)
-    query += " ORDER BY timestamp"
-    with get_connection(db_path) as conn:
-        conn.row_factory = sqlite3.Row
-        return [dict(row) for row in conn.execute(query, params).fetchall()]
+        query = query.where(table.c.mode == mode)
+    query = query.order_by(table.c.timestamp)
+
+    with engine.begin() as conn:
+        rows = conn.execute(query).mappings().all()
+        return [dict(row) for row in rows]
 
 
 def get_all_fills(strategy: str = None, mode: str = None, db_path: Path = DEFAULT_DB_PATH):
-    return _select("fills", strategy, mode, db_path)
+    return _select(fills_table, strategy, mode, db_path)
 
 
 def get_all_decisions(strategy: str = None, mode: str = None, db_path: Path = DEFAULT_DB_PATH):
-    return _select("decisions", strategy, mode, db_path)
+    return _select(decisions_table, strategy, mode, db_path)
 
 
 def get_latest_portfolio(strategy: str = None, mode: str = None, db_path: Path = DEFAULT_DB_PATH):
-    rows = _select("portfolio_snapshots", strategy, mode, db_path)
+    rows = _select(portfolio_snapshots_table, strategy, mode, db_path)
     return rows[-1] if rows else None
 
 
 def get_all_portfolio_snapshots(strategy: str = None, mode: str = None, db_path: Path = DEFAULT_DB_PATH):
-    return _select("portfolio_snapshots", strategy, mode, db_path)
+    return _select(portfolio_snapshots_table, strategy, mode, db_path)
