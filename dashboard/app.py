@@ -8,8 +8,26 @@ Core, Order Handler, or Portfolio State.
 Run with: streamlit run dashboard/app.py
 """
 
+import os
+
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Streamlit Community Cloud's "Secrets" don't automatically become
+# environment variables the way a local .env does -- bridge them here
+# so storage/db.py's os.getenv("DATABASE_URL") works the same way in
+# both places (see docs/PRD.md section 16.2). Locally there's no
+# .streamlit/secrets.toml at all (we use .env instead), and accessing
+# st.secrets in that case raises rather than returning empty -- catch
+# that and just fall back to whatever .env already loaded.
+try:
+    if "DATABASE_URL" in st.secrets:
+        os.environ["DATABASE_URL"] = st.secrets["DATABASE_URL"]
+except Exception:
+    pass
 
 from storage import db
 
