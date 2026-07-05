@@ -40,6 +40,13 @@ except Exception:
 
 from storage import db
 
+# Safe to call every time -- only creates tables if they don't already
+# exist. Without this, a freshly provisioned database (e.g. a new
+# Neon/Postgres instance with DATABASE_URL set but never initialized
+# by backtest.py/run_live.py yet) has no tables at all, and every
+# query below fails with "relation does not exist".
+db.init_db()
+
 st.set_page_config(page_title="Paper Trading Bot", layout="wide")
 st.title("Paper Trading Bot -- Dashboard")
 
