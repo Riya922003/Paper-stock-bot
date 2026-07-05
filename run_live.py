@@ -6,6 +6,7 @@ Usage: python run_live.py
 
 import os
 
+from alpaca.trading.client import TradingClient
 from apscheduler.schedulers.blocking import BlockingScheduler
 from dotenv import load_dotenv
 
@@ -19,17 +20,20 @@ from strategy import get_strategy
 load_dotenv()
 
 STARTING_CASH = 100_000.0
-CHECK_INTERVAL_MINUTES = 5  # TODO: confirm against HLD rule #5 (check frequency)
+CHECK_INTERVAL_MINUTES = int(os.getenv("CHECK_INTERVAL_MINUTES", 5))
 
 portfolio = PortfolioState(cash=STARTING_CASH, starting_capital=STARTING_CASH)
+_trading_client = TradingClient(os.getenv("ALPACA_API_KEY"), os.getenv("ALPACA_SECRET_KEY"), paper=True)
 
 
 def tick() -> None:
+    if not live_feed.is_market_open(_trading_client):
+        print("Market is closed -- skipping this cycle.")
+        return
+
     strategy_name = os.getenv("STRATEGY", "trend_following")
     decide = get_strategy(strategy_name)
 
-    # TODO: check Alpaca's /v2/clock endpoint here and skip the tick
-    # entirely if the market is closed
     snapshot = live_feed.get_snapshot()
     decisions = decide(snapshot, portfolio)
 
