@@ -402,6 +402,8 @@ paper-stock-bot/
 ├── .gitignore
 ├── requirements.txt
 ├── README.md
+├── DELIVERABLES.md                # client-facing submission checklist, separate from docs/
+├── AGENTS.md                      # entry point for AI agents, see there for current status
 │
 ├── docs/                         # Task brief, HLD, this PRD, prior research — see AGENTS.md
 │
@@ -412,7 +414,7 @@ paper-stock-bot/
 ├── strategy/
 │   ├── __init__.py               # Registry — reads STRATEGY env var, returns the matching decide()
 │   ├── mean_reversion.py         # candidate strategy, not yet implemented
-│   ├── trend_following.py        # the MVP strategy: EMA(9)/EMA(21) crossover + RSI(14) filter
+│   ├── trend_following.py        # the MVP strategy: EMA(9)/EMA(21) crossover + RSI(14) filter — implemented
 │   └── breakout.py               # candidate strategy, not yet implemented
 │
 ├── data/
@@ -422,33 +424,44 @@ paper-stock-bot/
 │
 ├── portfolio/
 │   ├── __init__.py
-│   └── state.py                  # apply_fill() — the only legitimate way PortfolioState changes
+│   └── state.py                  # apply_fill() — the only legitimate way PortfolioState changes; also
+│                                   # load_portfolio_state() -- reconstructs state from the DB for a
+│                                   # process that doesn't keep it in memory across cycles
 │
 ├── execution/
 │   ├── __init__.py
 │   ├── live_adapter.py           # submit_order() via Alpaca (paper or live)
-│   └── backtest_adapter.py       # submit_order() — simulated fill from historical price
+│   └── backtest_adapter.py       # submit_order() — fills at next candle's open + slippage
 │
 ├── storage/
 │   ├── __init__.py
-│   └── db.py                     # SQLite: decisions, fills, portfolio_snapshots tables
+│   └── db.py                     # SQLAlchemy-backed: decisions, fills, portfolio_snapshots tables.
+│                                   # SQLite locally/tests, Postgres via DATABASE_URL when deployed.
 │
 ├── dashboard/
-│   └── app.py                    # Streamlit viewer — holdings, P&L, trade/decision history (read-only)
+│   ├── app.py                    # Streamlit viewer — holdings, P&L, trade/decision history (read-only)
+│   └── requirements.txt          # dashboard-only deps, deliberately excludes pandas-ta/alpaca-py/etc.
 │
 ├── reports/                      # Generated backtest report output (summary .txt + trade .csv per period)
+│                                   # -- the 6 official trend_following results are committed here
 │
-├── tests/
-│   └── test_strategy_core.py     # Strategy Core unit tests, no network required
+├── tests/                         # 82 tests total, no network access required
+│   ├── test_strategy_core.py
+│   ├── test_historical_feed.py
+│   ├── test_backtest_adapter.py
+│   ├── test_live_feed.py
+│   ├── test_live_adapter.py
+│   ├── test_report.py
+│   └── test_db.py
 │
 ├── backtest.py                   # Entry point — runs the configured strategy across all 6 periods
 ├── run_live.py                   # Entry point — the live paper-trading loop (APScheduler)
-└── report.py                     # NOT YET CREATED — Component 6, reads storage/db.py, writes into reports/
+└── report.py                     # Component 6 — reads storage/db.py, writes into reports/. Implemented.
 ```
 
 There is no `config.py` — each entry point (`run_live.py`, `backtest.py`) reads `os.getenv()` directly after `load_dotenv()`, matching the level of indirection already in the codebase.
 
-`report.py` (Component 6) does not exist yet — create it at the repo root, alongside `backtest.py` and `run_live.py`, reading from `storage/db.py` and writing its output into `reports/`.
+See `AGENTS.md` section 5 for the current, up-to-date implementation status — this section describes the decided file layout, not a live status tracker.
 
 ---
 

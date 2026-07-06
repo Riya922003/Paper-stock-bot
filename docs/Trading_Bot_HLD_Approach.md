@@ -32,6 +32,10 @@ Build an automated trading bot that:
 
 ## 3. System Architecture
 
+### 3.0 Diagram (visual)
+
+![HLD system architecture diagram](../public/images/system-dia.jpeg)
+
 ### 3.1 Diagram (text form)
 
 ```
