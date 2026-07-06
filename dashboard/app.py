@@ -38,7 +38,7 @@ try:
 except Exception:
     pass
 
-from report import compute_metrics, reconstruct_trades
+from report import COMMISSION, SLIPPAGE_PCT, compute_metrics, reconstruct_trades
 from storage import db
 
 # Safe to call every time -- only creates tables if they don't already
@@ -72,12 +72,23 @@ else:
     trades = reconstruct_trades(fills)
     metrics = compute_metrics(trades, equity_curve, STARTING_CAPITAL, equity_curve[-1])
 
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("Equity", f"${metrics.ending_capital:,.2f}")
-    col2.metric("Net P&L", f"${metrics.net_pnl:,.2f}", f"{metrics.return_pct:+.2f}%")
-    col3.metric("Win rate", f"{metrics.win_rate:.1f}%", f"{metrics.total_trades} trades")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Starting capital", f"${metrics.starting_capital:,.2f}")
+    col2.metric("Equity", f"${metrics.ending_capital:,.2f}")
+    col3.metric("Net P&L", f"${metrics.net_pnl:,.2f}", f"{metrics.return_pct:+.2f}%")
     col4.metric("Max drawdown", f"{metrics.max_drawdown_pct:.2f}%")
-    col5.metric("Last updated", snapshots[-1]["timestamp"])
+
+    col5, col6, col7, col8 = st.columns(4)
+    col5.metric("Total trades", metrics.total_trades)
+    col6.metric("Winning trades", metrics.winning_trades)
+    col7.metric("Losing trades", metrics.losing_trades)
+    col8.metric("Win rate", f"{metrics.win_rate:.1f}%")
+
+    st.caption(
+        f"Last updated: {snapshots[-1]['timestamp']}  ·  "
+        f"Slippage assumption: {SLIPPAGE_PCT * 100:.2f}% (applied against the trader on every fill)  ·  "
+        f"Commission assumption: ${COMMISSION:.2f} (Alpaca is commission-free)"
+    )
 
     st.subheader("Equity curve")
     equity_df = pd.DataFrame(
