@@ -4,6 +4,8 @@ An automated paper-trading bot for 8 US stocks — `AMZN, TSLA, MSFT, AAPL, META
 
 **Status:** fully built and tested. Strategy Core, backtester, live trading loop, and dashboard are all implemented and passing 81 automated tests. See [`DELIVERABLES.md`](DELIVERABLES.md) for the full submission checklist against the original task requirements.
 
+**Full client-facing submission document:** [Google Doc](https://docs.google.com/document/d/1tejiwQ0DlO76RFh1agO0xA8w1RNWE7kc1C-N5Pux4mU/edit?usp=sharing) — research document, platform/strategy explanations, backtest results, and the going-live checklist, written for a reviewer rather than a developer.
+
 ---
 
 ## Requirements
