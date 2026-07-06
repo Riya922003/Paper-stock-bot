@@ -18,7 +18,7 @@ import pytest
 
 from core.models import Decision, Fill
 from storage import db
-from storage.db import _resolve_url
+from storage.db import _get_engine, _resolve_url
 
 
 @pytest.fixture
@@ -155,6 +155,18 @@ def test_resolve_url_prefers_database_url_env_var_when_set(tmp_path, monkeypatch
     monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@host:5432/mydb")
     db_path = tmp_path / "bot.db"
     assert _resolve_url(db_path) == "postgresql://user:pass@host:5432/mydb"
+
+
+def test_engine_has_pool_pre_ping_enabled(tmp_path):
+    # Regression test: hosted Postgres (e.g. Neon) can close idle
+    # connections server-side. run_live.py holds one connection open
+    # for hours between writes (market is closed most of the day),
+    # and without pool_pre_ping, the first write after a long idle
+    # stretch fails with "server closed the connection unexpectedly"
+    # instead of transparently reconnecting. Confirmed this actually
+    # happened against the real Neon database before this fix.
+    engine = _get_engine(f"sqlite:///{tmp_path / 'bot.db'}")
+    assert engine.pool._pre_ping is True
 
 
 def test_two_different_db_files_are_fully_isolated(tmp_path):

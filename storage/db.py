@@ -93,7 +93,15 @@ def _resolve_url(db_path: Path) -> str:
 
 @lru_cache(maxsize=None)
 def _get_engine(url: str):
-    return create_engine(url)
+    # pool_pre_ping tests each pooled connection with a lightweight
+    # query before handing it to the caller, transparently reconnecting
+    # if it's gone stale -- needed because hosted Postgres (e.g. Neon)
+    # can close idle connections server-side. run_live.py holds one
+    # connection open for hours between actual writes (market is closed
+    # most of the day), so without this, the first write after a long
+    # idle stretch fails with "server closed the connection
+    # unexpectedly" instead of just reconnecting.
+    return create_engine(url, pool_pre_ping=True)
 
 
 def _engine_for(db_path: Path):
