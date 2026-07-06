@@ -6,6 +6,10 @@ An automated paper-trading bot for 8 US stocks — `AMZN, TSLA, MSFT, AAPL, META
 
 **Full client-facing submission document:** [Google Doc](https://docs.google.com/document/d/1tejiwQ0DlO76RFh1agO0xA8w1RNWE7kc1C-N5Pux4mU/edit?usp=sharing) — research document, platform/strategy explanations, backtest results, and the going-live checklist, written for a reviewer rather than a developer.
 
+## System Design
+
+![System architecture diagram](public/images/system-dia.jpeg)
+
 ---
 
 ## Requirements
